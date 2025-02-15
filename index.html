@@ -98,9 +98,15 @@
                 const img = new Image();
                 img.src = event.target.result;
                 img.onload = function() {
-                    const encoded = steg.encode(message, img);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const encodedImage = steg.encode(message, canvas);
                     const link = document.createElement('a');
-                    link.href = encoded;
+                    link.href = encodedImage;
                     link.download = 'encoded_image.png';
                     document.body.appendChild(link);
                     link.click();
@@ -122,8 +128,14 @@
                 const img = new Image();
                 img.src = event.target.result;
                 img.onload = function() {
-                    const secretMessage = steg.decode(img) || 'No secret message found';
-                    document.getElementById('decodedMessage').textContent = secretMessage;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0);
+                    
+                    const secretMessage = steg.decode(canvas);
+                    document.getElementById('decodedMessage').textContent = secretMessage || 'No secret message found';
                 }
             }
             reader.readAsDataURL(fileInput.files[0]);
