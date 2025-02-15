@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Steganography</title>
-    <script src="https://cdn.jsdelivr.net/npm/exif-js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/steg.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -95,18 +95,19 @@
             
             const reader = new FileReader();
             reader.onload = function(event) {
-                const imgData = event.target.result;
-                const exif = EXIF.write(imgData, { UserComment: message });
-                
-                const blob = new Blob([exif], { type: 'image/jpeg' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = 'encoded_image.jpg';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    const encoded = steg.encode(message, img);
+                    const link = document.createElement('a');
+                    link.href = encoded;
+                    link.download = 'encoded_image.png';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                }
             }
-            reader.readAsArrayBuffer(fileInput.files[0]);
+            reader.readAsDataURL(fileInput.files[0]);
         }
         
         function decodeMessage() {
@@ -118,10 +119,12 @@
             
             const reader = new FileReader();
             reader.onload = function(event) {
-                EXIF.getData(fileInput.files[0], function() {
-                    const secretMessage = EXIF.getTag(this, 'UserComment') || 'No secret message found';
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = function() {
+                    const secretMessage = steg.decode(img) || 'No secret message found';
                     document.getElementById('decodedMessage').textContent = secretMessage;
-                });
+                }
             }
             reader.readAsDataURL(fileInput.files[0]);
         }
